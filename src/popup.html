@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PageTyper</title>
+    <link rel="stylesheet" href="./popup.css">
+  </head>
+  <body>
+    <main class="popup">
+      <header>
+        <h1>PageTyper</h1>
+        <p id="status">Ready on article pages.</p>
+      </header>
+      <div class="actions">
+        <button id="overlay" type="button">Overlay mode</button>
+        <button id="inline" class="secondary" type="button">Inline mode</button>
+      </div>
+      <section class="settings" aria-label="Settings">
+        <div class="setting-row">
+          <label for="default-mode">Default mode</label>
+          <select id="default-mode">
+            <option value="overlay">Overlay</option>
+            <option value="inline">Inline</option>
+          </select>
+        </div>
+        <label class="check-row">
+          <input id="rewards-enabled" type="checkbox">
+          <span>Milestone rewards</span>
+        </label>
+        <div class="setting-row">
+          <label for="effect-level">Effects</label>
+          <select id="effect-level">
+            <option value="off">Off</option>
+            <option value="minimal">Minimal</option>
+            <option value="full">Full</option>
+          </select>
+        </div>
+        <label class="check-row">
+          <input id="sound-enabled" type="checkbox">
+          <span>Milestone sound</span>
+        </label>
+        <label class="check-row">
+          <input id="stats-enabled" type="checkbox">
+          <span>Save local stats</span>
+        </label>
+        <div id="stats-summary" class="stats-summary">No milestones yet.</div>
+      </section>
+      <p class="hint">Esc closes the active typing mode.</p>
+    </main>
+    <script src="./reward-system.js"></script>
+    <script src="./popup.js"></script>
+  </body>
+</html>
