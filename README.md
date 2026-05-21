@@ -2,7 +2,7 @@
 
 PageTyper is a Chrome extension prototype that turns the article you are reading into a typing practice layer.
 
-![PageTyper promo](store-assets/promo-small-440x280.png)
+![PageTyper promo](store-assets/github-promo.svg)
 
 ## MVP
 
@@ -34,6 +34,7 @@ Settings are saved with `chrome.storage.sync`. Milestone stats and badges are sa
 ## Chrome Web Store Assets
 
 - Extension icons: `assets/icon-16.png`, `assets/icon-32.png`, `assets/icon-48.png`, `assets/icon-128.png`
+- GitHub promotional image: `store-assets/github-promo.svg`
 - Small promotional image: `store-assets/promo-small-440x280.png`
 - Screenshot: `store-assets/screenshot-1280x800.png`
 - Listing copy: `store-listing/listing.md`
