@@ -4,6 +4,8 @@
     rewardsEnabled: true,
     milestoneSize: 100,
     effectLevel: "minimal",
+    keypressSoundEnabled: false,
+    mistakeSoundEnabled: false,
     soundEnabled: false,
     statsEnabled: true
   });
@@ -35,6 +37,8 @@
       rewardsEnabled: typeof settings.rewardsEnabled === "boolean" ? settings.rewardsEnabled : DEFAULT_SETTINGS.rewardsEnabled,
       milestoneSize,
       effectLevel: pickAllowed(settings.effectLevel, ["off", "minimal", "full"], DEFAULT_SETTINGS.effectLevel),
+      keypressSoundEnabled: typeof settings.keypressSoundEnabled === "boolean" ? settings.keypressSoundEnabled : DEFAULT_SETTINGS.keypressSoundEnabled,
+      mistakeSoundEnabled: typeof settings.mistakeSoundEnabled === "boolean" ? settings.mistakeSoundEnabled : DEFAULT_SETTINGS.mistakeSoundEnabled,
       soundEnabled: typeof settings.soundEnabled === "boolean" ? settings.soundEnabled : DEFAULT_SETTINGS.soundEnabled,
       statsEnabled: typeof settings.statsEnabled === "boolean" ? settings.statsEnabled : DEFAULT_SETTINGS.statsEnabled
     };

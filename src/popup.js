@@ -5,6 +5,8 @@
   const defaultMode = document.getElementById("default-mode");
   const rewardsEnabled = document.getElementById("rewards-enabled");
   const effectLevel = document.getElementById("effect-level");
+  const keypressSoundEnabled = document.getElementById("keypress-sound-enabled");
+  const mistakeSoundEnabled = document.getElementById("mistake-sound-enabled");
   const soundEnabled = document.getElementById("sound-enabled");
   const statsEnabled = document.getElementById("stats-enabled");
   const statsSummary = document.getElementById("stats-summary");
@@ -57,6 +59,8 @@
     defaultMode.value = settings.defaultMode;
     rewardsEnabled.checked = settings.rewardsEnabled;
     effectLevel.value = settings.effectLevel;
+    keypressSoundEnabled.checked = settings.keypressSoundEnabled;
+    mistakeSoundEnabled.checked = settings.mistakeSoundEnabled;
     soundEnabled.checked = settings.soundEnabled;
     statsEnabled.checked = settings.statsEnabled;
   }
@@ -73,6 +77,8 @@
       defaultMode: defaultMode.value,
       rewardsEnabled: rewardsEnabled.checked,
       effectLevel: effectLevel.value,
+      keypressSoundEnabled: keypressSoundEnabled.checked,
+      mistakeSoundEnabled: mistakeSoundEnabled.checked,
       soundEnabled: soundEnabled.checked,
       statsEnabled: statsEnabled.checked
     });
@@ -120,7 +126,7 @@
     }
   });
 
-  [defaultMode, rewardsEnabled, effectLevel, soundEnabled, statsEnabled].forEach((control) => {
+  [defaultMode, rewardsEnabled, effectLevel, keypressSoundEnabled, mistakeSoundEnabled, soundEnabled, statsEnabled].forEach((control) => {
     control.addEventListener("change", saveSettings);
   });
 

@@ -16,6 +16,12 @@ test("normalizeSettings keeps feedback configurable with safe defaults", () => {
     milestoneSize: 50,
     effectLevel: "full"
   });
+  assert.deepEqual(normalizeSettings({ keypressSoundEnabled: true, mistakeSoundEnabled: true, soundEnabled: true }), {
+    ...DEFAULT_SETTINGS,
+    keypressSoundEnabled: true,
+    mistakeSoundEnabled: true,
+    soundEnabled: true
+  });
 });
 
 test("applyMilestoneProgress emits one event per crossed milestone", () => {

@@ -43,6 +43,7 @@
   let state = null;
   let cachedSettings = rewards.normalizeSettings();
   let cachedStats = rewards.normalizeStats();
+  let typingAudio = null;
 
   function readStorage(area, key) {
     return new Promise((resolve) => {
@@ -220,6 +221,56 @@
     state.mistakesValue.textContent = String(state.mistakeCount);
   }
 
+  function getTypingAudio() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) {
+      return null;
+    }
+
+    if (!typingAudio || typingAudio.state === "closed") {
+      typingAudio = new AudioContext();
+    }
+
+    if (typingAudio.state === "suspended") {
+      typingAudio.resume().catch(() => {});
+    }
+
+    return typingAudio;
+  }
+
+  function playTone({ frequency, duration, type, peakVolume }) {
+    const audio = getTypingAudio();
+    if (!audio) {
+      return;
+    }
+
+    const start = audio.currentTime;
+    const oscillator = audio.createOscillator();
+    const gain = audio.createGain();
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, start);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(peakVolume, start + 0.006);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    oscillator.connect(gain);
+    gain.connect(audio.destination);
+    oscillator.start(start);
+    oscillator.stop(start + duration + 0.01);
+  }
+
+  function playTypingSound(isMistake) {
+    if (isMistake && cachedSettings.mistakeSoundEnabled) {
+      playTone({ frequency: 185, duration: 0.07, type: "square", peakVolume: 0.035 });
+      return;
+    }
+
+    if (!cachedSettings.keypressSoundEnabled) {
+      return;
+    }
+
+    playTone({ frequency: 760, duration: 0.026, type: "triangle", peakVolume: 0.018 });
+  }
+
   function playMilestoneSound() {
     if (!cachedSettings.soundEnabled) {
       return;
@@ -374,6 +425,7 @@
 
     const expected = state.text[state.index];
     const className = metrics.evaluateCharacter(expected, event.key) ? "is-correct" : "is-wrong";
+    playTypingSound(className === "is-wrong");
     if (className === "is-wrong") {
       state.mistakeCount += 1;
     } else {
