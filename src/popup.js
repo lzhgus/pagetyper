@@ -13,6 +13,13 @@
   const RUNNABLE_PAGE_PATTERN = /^(https?:|file:)/;
   const rewards = window.PageTyperRewards;
   let settings = rewards.DEFAULT_SETTINGS;
+  let typingModeActive = false;
+
+  function updateModeControls(response) {
+    typingModeActive = Boolean(response.enabled);
+    overlay.textContent = typingModeActive ? "Stop typing mode" : "Overlay mode";
+    inline.disabled = typingModeActive;
+  }
 
   function canRunOnTab(tab) {
     return tab && tab.id && RUNNABLE_PAGE_PATTERN.test(tab.url || "");
@@ -94,8 +101,7 @@
   async function refreshStatus() {
     try {
       const response = await sendToActiveTab({ type: "PAGE_TYPER_STATUS" });
-      overlay.textContent = response.enabled ? "Stop typing mode" : "Overlay mode";
-      inline.disabled = response.enabled;
+      updateModeControls(response);
       status.textContent = response.enabled ? `${response.mode} mode is active.` : "Ready on this page.";
     } catch (error) {
       overlay.disabled = true;
@@ -106,9 +112,8 @@
 
   overlay.addEventListener("click", async () => {
     try {
-      const response = await sendToActiveTab({ type: "PAGE_TYPER_TOGGLE" });
-      overlay.textContent = response.enabled ? "Stop typing mode" : "Overlay mode";
-      inline.disabled = response.enabled;
+      const response = await sendToActiveTab(typingModeActive ? { type: "PAGE_TYPER_TOGGLE" } : { type: "PAGE_TYPER_START", mode: "overlay" });
+      updateModeControls(response);
       status.textContent = response.message || "Updated.";
     } catch (error) {
       status.textContent = "Refresh the page, then try again.";
@@ -118,8 +123,7 @@
   inline.addEventListener("click", async () => {
     try {
       const response = await sendToActiveTab({ type: "PAGE_TYPER_START", mode: "inline" });
-      overlay.textContent = response.enabled ? "Stop typing mode" : "Overlay mode";
-      inline.disabled = response.enabled;
+      updateModeControls(response);
       status.textContent = response.message || "Updated.";
     } catch (error) {
       status.textContent = "Refresh the page, then try again.";
