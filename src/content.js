@@ -231,10 +231,6 @@
       typingAudio = new AudioContext();
     }
 
-    if (typingAudio.state === "suspended") {
-      typingAudio.resume().catch(() => {});
-    }
-
     return typingAudio;
   }
 
@@ -244,23 +240,32 @@
       return;
     }
 
-    const start = audio.currentTime;
-    const oscillator = audio.createOscillator();
-    const gain = audio.createGain();
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(frequency, start);
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(peakVolume, start + 0.006);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-    oscillator.connect(gain);
-    gain.connect(audio.destination);
-    oscillator.start(start);
-    oscillator.stop(start + duration + 0.01);
+    const scheduleTone = () => {
+      const start = audio.currentTime;
+      const oscillator = audio.createOscillator();
+      const gain = audio.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, start);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(peakVolume, start + 0.006);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+      oscillator.connect(gain);
+      gain.connect(audio.destination);
+      oscillator.start(start);
+      oscillator.stop(start + duration + 0.01);
+    };
+
+    if (audio.state === "suspended") {
+      audio.resume().then(scheduleTone).catch(() => {});
+      return;
+    }
+
+    scheduleTone();
   }
 
   function playTypingSound(isMistake) {
     if (isMistake && cachedSettings.mistakeSoundEnabled) {
-      playTone({ frequency: 185, duration: 0.07, type: "square", peakVolume: 0.035 });
+      playTone({ frequency: 180, duration: 0.08, type: "square", peakVolume: 0.12 });
       return;
     }
 
@@ -268,7 +273,7 @@
       return;
     }
 
-    playTone({ frequency: 760, duration: 0.026, type: "triangle", peakVolume: 0.018 });
+    playTone({ frequency: 720, duration: 0.035, type: "triangle", peakVolume: 0.07 });
   }
 
   function playMilestoneSound() {
