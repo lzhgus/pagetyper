@@ -16,5 +16,6 @@
   <rect x="470" y="264" width="46" height="46" rx="12" fill="#D95F45"/>
   <rect x="536" y="264" width="46" height="46" rx="12" fill="#466CC5"/>
 
-  <text x="338" y="340" fill="#6B665E" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="500">Typing practice for articles.</text>
+  <text x="338" y="332" fill="#6B665E" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="500">Inline and overlay typing</text>
+  <text x="338" y="362" fill="#6B665E" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="500">practice for articles.</text>
 </svg>
