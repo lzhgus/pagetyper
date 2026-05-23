@@ -4,7 +4,9 @@ const {
   normalizePracticeText,
   isTypingKey,
   evaluateCharacter,
-  calculateStats
+  calculateStats,
+  normalizeStartBlockIndex,
+  getPracticeTextFromBlocks
 } = require("../src/text-metrics.js");
 
 test("normalizePracticeText collapses whitespace for stable typing", () => {
@@ -36,4 +38,18 @@ test("calculateStats reports WPM and accuracy from completed characters", () => 
     wpm: 2,
     elapsedMs: 60000
   });
+});
+
+test("normalizeStartBlockIndex clamps invalid paragraph choices", () => {
+  assert.equal(normalizeStartBlockIndex(2, 5), 2);
+  assert.equal(normalizeStartBlockIndex(-1, 5), 0);
+  assert.equal(normalizeStartBlockIndex(99, 5), 0);
+  assert.equal(normalizeStartBlockIndex(1, 0), 0);
+});
+
+test("getPracticeTextFromBlocks starts from the selected paragraph", () => {
+  const blocks = ["Intro", "  First body\nparagraph  ", "Second body paragraph"];
+
+  assert.equal(getPracticeTextFromBlocks(blocks, 1, " "), "First body paragraph Second body paragraph");
+  assert.equal(getPracticeTextFromBlocks(blocks, 1, ""), "First body paragraphSecond body paragraph");
 });

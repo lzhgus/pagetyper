@@ -44,6 +44,8 @@
   let cachedSettings = rewards.normalizeSettings();
   let cachedStats = rewards.normalizeStats();
   let typingAudio = null;
+  let startBlockIndex = 0;
+  let startPicker = null;
 
   function readStorage(area, key) {
     return new Promise((resolve) => {
@@ -163,6 +165,7 @@
     return {
       articleNode,
       blockNodes,
+      blocks,
       title: document.title || "Untitled page",
       text: text.slice(0, MAX_ARTICLE_LENGTH)
     };
@@ -177,6 +180,97 @@
       element.textContent = text;
     }
     return element;
+  }
+
+  function getStartSelection(blockCount) {
+    const safeIndex = metrics.normalizeStartBlockIndex(startBlockIndex, blockCount);
+    return {
+      blockIndex: safeIndex,
+      label: safeIndex === 0 ? "Beginning" : `Paragraph ${safeIndex + 1}`
+    };
+  }
+
+  function clearStartPicker() {
+    if (!startPicker) {
+      return;
+    }
+
+    startPicker.root.remove();
+    startPicker.markers.forEach((marker) => marker.remove());
+    startPicker.blocks.forEach((block) => block.classList.remove("pagetyper-start-candidate"));
+    startPicker = null;
+  }
+
+  function setStartBlock(index, blockCount) {
+    startBlockIndex = metrics.normalizeStartBlockIndex(index, blockCount);
+    return { enabled: Boolean(state), mode: state ? state.mode : null, startSelection: getStartSelection(blockCount) };
+  }
+
+  function resetStartBlock() {
+    clearStartPicker();
+    startBlockIndex = 0;
+    return { enabled: Boolean(state), mode: state ? state.mode : null, startSelection: getStartSelection(0) };
+  }
+
+  function pickStartFromCurrentView() {
+    if (state) {
+      return { enabled: true, mode: state.mode, message: "Stop typing mode before changing the start point.", startSelection: getStartSelection(0) };
+    }
+
+    const article = extractArticle();
+    const blocks = article.blockNodes.filter((node) => getText(node).length >= 10);
+    const visibleIndex = blocks.findIndex((node) => {
+      const rect = node.getBoundingClientRect();
+      return rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight;
+    });
+    const fallbackIndex = blocks.findIndex((node) => node.getBoundingClientRect().top >= 0);
+    const nextIndex = visibleIndex >= 0 ? visibleIndex : fallbackIndex >= 0 ? fallbackIndex : 0;
+
+    return {
+      ...setStartBlock(nextIndex, blocks.length),
+      message: `Start point set to ${getStartSelection(blocks.length).label}.`
+    };
+  }
+
+  function startParagraphPicker() {
+    if (state) {
+      return { enabled: true, mode: state.mode, message: "Stop typing mode before changing the start point.", startSelection: getStartSelection(0) };
+    }
+
+    clearStartPicker();
+    const article = extractArticle();
+    const blocks = article.blockNodes.filter((node) => getText(node).length >= 10);
+    if (blocks.length === 0) {
+      return { enabled: false, message: "I could not find paragraph blocks on this page.", startSelection: getStartSelection(0) };
+    }
+
+    const root = createElement("section", "pagetyper-start-picker");
+    const title = createElement("strong", "", "Choose where typing should begin");
+    const hint = createElement("span", "", "Click Start here next to any paragraph. Esc cancels.");
+    const cancelButton = createElement("button", "pagetyper-start-cancel", "Cancel");
+    const markers = [];
+
+    cancelButton.type = "button";
+    cancelButton.addEventListener("click", clearStartPicker);
+    root.append(title, hint, cancelButton);
+    document.documentElement.append(root);
+
+    blocks.forEach((block, index) => {
+      const marker = createElement("button", "pagetyper-start-marker", "Start here");
+      marker.type = "button";
+      marker.addEventListener("click", () => {
+        setStartBlock(index, blocks.length);
+        clearStartPicker();
+      });
+      block.classList.add("pagetyper-start-candidate");
+      block.insertAdjacentElement("beforebegin", marker);
+      markers.push(marker);
+    });
+
+    startPicker = { root, markers, blocks };
+    blocks[metrics.normalizeStartBlockIndex(startBlockIndex, blocks.length)].scrollIntoView({ block: "center", inline: "nearest" });
+
+    return { enabled: false, message: "Pick a paragraph on the page.", startSelection: getStartSelection(blocks.length) };
   }
 
   function renderCharacterSpans(container, text) {
@@ -445,6 +539,12 @@
   }
 
   function handleShortcut(event) {
+    if (startPicker && event.key === "Escape") {
+      event.preventDefault();
+      clearStartPicker();
+      return;
+    }
+
     if (event.altKey && event.shiftKey && event.key.toLowerCase() === "t") {
       event.preventDefault();
       state ? stop() : cachedSettings.defaultMode === "inline" ? startInlineMode() : startOverlayMode();
@@ -456,8 +556,14 @@
       return { enabled: true, message: "Typing mode is already active." };
     }
 
+    clearStartPicker();
     const article = extractArticle();
-    if (article.text.length < MIN_ARTICLE_LENGTH) {
+    const safeStart = metrics.normalizeStartBlockIndex(startBlockIndex, article.blocks.length);
+    const practiceText = article.blocks.length > 0
+      ? metrics.getPracticeTextFromBlocks(article.blocks, safeStart, " ").slice(0, MAX_ARTICLE_LENGTH)
+      : article.text;
+
+    if (practiceText.length < 10 || (safeStart === 0 && article.text.length < MIN_ARTICLE_LENGTH)) {
       return { enabled: false, message: "I could not find enough article text on this page." };
     }
 
@@ -466,7 +572,8 @@
     const header = createElement("header", "pagetyper-header");
     const title = createElement("div", "pagetyper-title");
     const titleText = createElement("strong", "", article.title);
-    const subtitle = createElement("span", "", `${article.text.length.toLocaleString()} characters detected`);
+    const startSelection = getStartSelection(article.blocks.length);
+    const subtitle = createElement("span", "", `${practiceText.length.toLocaleString()} characters · ${startSelection.label}`);
     const closeButton = createElement("button", "pagetyper-close", "×");
     const stats = createElement("div", "pagetyper-stats");
     const text = createElement("div", "pagetyper-text");
@@ -480,7 +587,7 @@
 
     const statItems = createStatItems();
     stats.append(...statItems);
-    renderCharacterSpans(text, article.text);
+    renderCharacterSpans(text, practiceText);
     panel.append(header, stats, text, footer);
     root.append(panel);
     document.documentElement.append(root);
@@ -488,7 +595,7 @@
     state = {
       mode: "overlay",
       root,
-      text: article.text,
+      text: practiceText,
       index: 0,
       typedCount: 0,
       correctCount: 0,
@@ -526,23 +633,26 @@
       return { enabled: true, message: "Typing mode is already active." };
     }
 
+    clearStartPicker();
     const article = extractArticle();
     const usableBlocks = article.blockNodes
       .map((node) => ({ node, text: getText(node) }))
       .filter((block) => block.text.length >= 10);
-    const text = usableBlocks.map((block) => block.text).join("");
+    const safeStart = metrics.normalizeStartBlockIndex(startBlockIndex, usableBlocks.length);
+    const practiceBlocks = usableBlocks.slice(safeStart);
+    const text = metrics.getPracticeTextFromBlocks(usableBlocks.map((block) => block.text), safeStart, "");
 
-    if (text.length < MIN_ARTICLE_LENGTH) {
+    if (text.length < 10 || (safeStart === 0 && text.length < MIN_ARTICLE_LENGTH)) {
       return { enabled: false, message: "I could not find enough article text on this page." };
     }
 
-    const restoreBlocks = usableBlocks.map((block) => ({
+    const restoreBlocks = practiceBlocks.map((block) => ({
       node: block.node,
       html: block.node.innerHTML
     }));
     const characters = [];
 
-    for (const block of usableBlocks) {
+    for (const block of practiceBlocks) {
       renderInlineBlock(block.node, block.text, characters);
     }
 
@@ -554,7 +664,7 @@
 
     title.append(
       createElement("strong", "", "PageTyper inline"),
-      createElement("span", "", `${characters.length.toLocaleString()} characters`)
+      createElement("span", "", `${characters.length.toLocaleString()} characters · ${getStartSelection(usableBlocks.length).label}`)
     );
     closeButton.type = "button";
     closeButton.addEventListener("click", stop);
@@ -608,7 +718,8 @@
 
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "PAGE_TYPER_STATUS") {
-      sendResponse({ enabled: Boolean(state), mode: state ? state.mode : null, settings: cachedSettings });
+      const article = extractArticle();
+      sendResponse({ enabled: Boolean(state), mode: state ? state.mode : null, settings: cachedSettings, startSelection: getStartSelection(article.blockNodes.length) });
       return;
     }
 
@@ -619,6 +730,21 @@
 
     if (message.type === "PAGE_TYPER_START") {
       sendResponse(message.mode === "inline" ? startInlineMode() : startOverlayMode());
+      return;
+    }
+
+    if (message.type === "PAGE_TYPER_PICK_START") {
+      sendResponse(startParagraphPicker());
+      return;
+    }
+
+    if (message.type === "PAGE_TYPER_START_FROM_VIEW") {
+      sendResponse(pickStartFromCurrentView());
+      return;
+    }
+
+    if (message.type === "PAGE_TYPER_RESET_START") {
+      sendResponse(resetStartBlock());
       return;
     }
 

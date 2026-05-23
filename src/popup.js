@@ -2,6 +2,10 @@
   const status = document.getElementById("status");
   const overlay = document.getElementById("overlay");
   const inline = document.getElementById("inline");
+  const startLabel = document.getElementById("start-label");
+  const pickStart = document.getElementById("pick-start");
+  const currentViewStart = document.getElementById("current-view-start");
+  const resetStart = document.getElementById("reset-start");
   const defaultMode = document.getElementById("default-mode");
   const rewardsEnabled = document.getElementById("rewards-enabled");
   const effectLevel = document.getElementById("effect-level");
@@ -19,6 +23,12 @@
     typingModeActive = Boolean(response.enabled);
     overlay.textContent = typingModeActive ? "Stop typing mode" : "Overlay mode";
     inline.disabled = typingModeActive;
+    pickStart.disabled = typingModeActive;
+    currentViewStart.disabled = typingModeActive;
+    resetStart.disabled = typingModeActive;
+    if (response.startSelection && response.startSelection.label) {
+      startLabel.textContent = response.startSelection.label;
+    }
   }
 
   function canRunOnTab(tab) {
@@ -125,6 +135,39 @@
       const response = await sendToActiveTab({ type: "PAGE_TYPER_START", mode: "inline" });
       updateModeControls(response);
       status.textContent = response.message || "Updated.";
+    } catch (error) {
+      status.textContent = "Refresh the page, then try again.";
+    }
+  });
+
+  pickStart.addEventListener("click", async () => {
+    try {
+      const response = await sendToActiveTab({ type: "PAGE_TYPER_PICK_START" });
+      updateModeControls(response);
+      status.textContent = response.message || "Pick a paragraph on the page.";
+      if (!response.enabled) {
+        window.close();
+      }
+    } catch (error) {
+      status.textContent = "Refresh the page, then try again.";
+    }
+  });
+
+  currentViewStart.addEventListener("click", async () => {
+    try {
+      const response = await sendToActiveTab({ type: "PAGE_TYPER_START_FROM_VIEW" });
+      updateModeControls(response);
+      status.textContent = response.message || "Start point updated.";
+    } catch (error) {
+      status.textContent = "Refresh the page, then try again.";
+    }
+  });
+
+  resetStart.addEventListener("click", async () => {
+    try {
+      const response = await sendToActiveTab({ type: "PAGE_TYPER_RESET_START" });
+      updateModeControls(response);
+      status.textContent = "Start point reset.";
     } catch (error) {
       status.textContent = "Refresh the page, then try again.";
     }

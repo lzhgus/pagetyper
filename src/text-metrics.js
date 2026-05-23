@@ -36,11 +36,27 @@
     };
   }
 
+  function normalizeStartBlockIndex(index, blockCount) {
+    if (!Number.isInteger(index) || !Number.isInteger(blockCount) || blockCount <= 0) {
+      return 0;
+    }
+
+    return index >= 0 && index < blockCount ? index : 0;
+  }
+
+  function getPracticeTextFromBlocks(blocks, startBlockIndex, separator) {
+    const safeBlocks = Array.isArray(blocks) ? blocks : [];
+    const safeStart = normalizeStartBlockIndex(startBlockIndex, safeBlocks.length);
+    return safeBlocks.slice(safeStart).map((block) => normalizePracticeText(block)).join(separator);
+  }
+
   const api = {
     normalizePracticeText,
     isTypingKey,
     evaluateCharacter,
-    calculateStats
+    calculateStats,
+    normalizeStartBlockIndex,
+    getPracticeTextFromBlocks
   };
 
   if (typeof module !== "undefined" && module.exports) {
