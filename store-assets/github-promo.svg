@@ -4,7 +4,7 @@
 
   <rect x="112" y="112" width="164" height="164" rx="34" fill="#FFFDF8" stroke="#1E6B52" stroke-width="12"/>
   <text x="168" y="215" fill="#1E6B52" font-family="Inter, Arial, sans-serif" font-size="88" font-weight="800">P</text>
-  <path d="M178 246H232" stroke="#F5AE33" stroke-width="12" stroke-linecap="round"/>
+  <path d="M168 246H232" stroke="#F5AE33" stroke-width="12" stroke-linecap="round"/>
   <path d="M230 246L211 227" stroke="#F5AE33" stroke-width="12" stroke-linecap="round"/>
   <path d="M230 246L211 265" stroke="#F5AE33" stroke-width="12" stroke-linecap="round"/>
 

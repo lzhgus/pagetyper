@@ -12,6 +12,8 @@ Turn article pages into focused typing practice with inline or overlay modes.
 
 PageTyper helps you read and remember articles by typing along with the text directly in your browser.
 
+PageTyper is inspired by active learning research: typing along with text can turn passive reading into a more deliberate, focused interaction. Cognitive science work on retrieval practice and generation-based learning suggests that actively producing information can support retention more than simply rereading.
+
 Use it on article-like pages to automatically detect the main content and start a focused typing practice session. PageTyper supports a separate overlay mode as well as an experimental inline mode that lets you type over the original article text.
 
 Features:
